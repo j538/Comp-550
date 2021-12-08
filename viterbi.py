@@ -1,24 +1,26 @@
+from tokenize import String
 import numpy as np
 from nltk import word_tokenize
+from numpy.core.fromnumeric import argmax
 #Starting the viterbi code from class, 
 # then I will incorporate the specific spelling corrections
 
 #transitions : transition probs
 #emissions : emission probs
 #init : initial probs
-#N : Total number of states (all words in dict)
+#N : Total number of states (number of words in the corpus)
 #T : length of the sentence
 #s : input sentence
 #dict : all words seen in the corpus (i.e all states)
 def viterbi(transitions,emissions,init,N,T,s,dict):
     #Tokenize sentence
-    #w = word_tokenize(s)
-    w = [c for c in s]
-    print(w)
+    print(s)
+    w = word_tokenize(s)
+    #w = [c for c in s]
 
     #Create trellis and pointers
     delta = np.zeros((N,T))
-    pointers = np.zeros((N,T))
+    pointers = np.zeros((N,T),dtype=int)
 
     #Initialize first column
     for i in range(N):
@@ -31,29 +33,42 @@ def viterbi(transitions,emissions,init,N,T,s,dict):
             for i in range(N):
                 #Get all the possible scores
                 c.append(delta[i,t-1]*transitions[dict[i]][dict[j]]*emissions[dict[j]][w[t]])
+            #Store best score and the pointer to previous cell
             delta[j,t] = max(c)
+            pointers[j,t] = argmax(c)
+
     #Return max of last column
     print(delta)
-    return max(delta[:,N-1])
+    print(pointers)
+    return (pointers, argmax(delta[:,N-1]))
 
 #Recover the best corrected sentence
-def recover_path():
-    return
+def recover_path(len,pointers,dict,start):
+    path = [dict[start]]
+    prev = start
+    for i in range(len-1,0,-1):
+        index = pointers[prev,i]
+        path.append(dict[index])
+        prev = index
+    path.reverse()
+    new_s = ""
+    for s in path:
+        new_s = new_s + " " + s
+    return new_s
 
 #Testing using some small data
-pi = {"X" : 0.2, "Y" : 0.5, "Z" : 0.3}
+pi = {"i" : 0.6, "like" : 0.1, "movies" : 0.3}
 a = {
-    "X" : {"X" : 0.5, "Y" : 0.4, "Z" : 0.1},
-    "Y" : {"X" : 0.2, "Y" : 0.3, "Z" : 0.5},
-    "Z" : {"X" : 0.1, "Y" : 0.1, "Z" : 0.8},
+    "i" : {"i" : 0.1, "like" : 0.7, "movies" : 0.2},
+    "like" : {"i" : 0.1, "like" : 0.1, "movies" : 0.8},
+    "movies" : {"i" : 0.1, "like" : 0.1, "movies" : 0.8},
 }
 b = {
-    "X" : {"!" : 0.1, "@" : 0.9},
-    "Y" : {"!" : 0.5, "@" : 0.5},
-    "Z" : {"!" : 0.7, "@" : 0.3},
+    "i" : {"i" : 0.7, "liek" : 0.2, "move" : 0.1},
+    "like" : {"i" : 0.2, "liek" : 0.6, "move" : 0.2},
+    "movies" : {"i" : 0.1, "liek" : 0.1, "move" : 0.8},
 }
-dict = ["X","Y","Z"]
-s = "!@@!"
-print(viterbi(a,b,pi,len(dict),len(s),s,dict))
-
-#How do we access the correct word t. cannot use indices
+dict = ["i","like","movies"]
+s = "i liek move"
+(p,start) = viterbi(a,b,pi,len(dict),3,s,dict)
+print(recover_path(3, p, dict, start))
