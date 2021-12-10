@@ -1,30 +1,29 @@
-from tokenize import String
 import numpy as np
 from nltk import word_tokenize
 from numpy.core.fromnumeric import argmax
-#Starting the viterbi code from class, 
-# then I will incorporate the specific spelling corrections
 
 #transitions : transition probs
 #emissions : emission probs
 #init : initial probs
-#N : Total number of states (number of words in the corpus)
+#N : Total number of hidden states
 #T : length of the sentence
-#s : input sentence
-#dict : all words seen in the corpus (i.e all states)
-def viterbi(transitions,emissions,init,N,T,s,dict):
-    #Tokenize sentence
-    print(s)
-    w = word_tokenize(s)
-    #w = [c for c in s]
-
+#w : input words of a sentence
+#dict : all hidden states
+def viterbi(transitions,emissions,init,N,T,w,dict):
     #Create trellis and pointers
     delta = np.zeros((N,T))
     pointers = np.zeros((N,T),dtype=int)
 
     #Initialize first column
     for i in range(N):
-        delta[i,0] = init[dict[i]]*emissions[dict[i]][w[0]]
+        #Account for zero probabilities not stored in the dictionary
+        initial = init.get(dict[i])
+        e_i0 = emissions.get(dict[i]).get(w[0])
+        if initial == None :
+            initial = 0
+        if e_i0 == None :
+            e_i0 = 0
+        delta[i,0] = initial*e_i0
 
     #Loop over the trellis
     for t in range(1,T):
@@ -32,14 +31,19 @@ def viterbi(transitions,emissions,init,N,T,s,dict):
             c = []
             for i in range(N):
                 #Get all the possible scores
-                c.append(delta[i,t-1]*transitions[dict[i]][dict[j]]*emissions[dict[j]][w[t]])
+                t_ij = transitions.get(dict[i]).get(dict[j])
+                e_jt = emissions.get(dict[j]).get(w[t])
+                #Account for zero probabilities not stored in the dictionary
+                if t_ij == None :
+                    t_ij = 0
+                if e_jt == None:
+                    e_jt = 0
+                c.append(delta[i,t-1]*t_ij*e_jt)
             #Store best score and the pointer to previous cell
             delta[j,t] = max(c)
             pointers[j,t] = argmax(c)
-
-    #Return max of last column
     print(delta)
-    print(pointers)
+    #Return max of last column
     return (pointers, argmax(delta[:,N-1]))
 
 #Recover the best corrected sentence
@@ -64,11 +68,11 @@ a = {
     "movies" : {"i" : 0.1, "like" : 0.1, "movies" : 0.8},
 }
 b = {
-    "i" : {"i" : 0.7, "liek" : 0.2, "move" : 0.1},
-    "like" : {"i" : 0.2, "liek" : 0.6, "move" : 0.2},
-    "movies" : {"i" : 0.1, "liek" : 0.1, "move" : 0.8},
+    "i" : {"i" : 0.7, "like" : 0.2, "movy" : 0.1},
+    "like" : {"i" : 0.2, "like" : 0.6, "movy" : 0.2},
+    "movies" : {"i" : 0.1, "like" : 0.1, "movy" : 0.8},
 }
 dict = ["i","like","movies"]
-s = "i liek move"
-(p,start) = viterbi(a,b,pi,len(dict),3,s,dict)
+s = "i like movy"
+(p,start) = viterbi(a,b,pi,len(dict),3,word_tokenize(s),dict)
 print(recover_path(3, p, dict, start))
