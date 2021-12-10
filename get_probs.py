@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 import collections, nltk, json
-
+from numpy.polynomial import Polynomial
 #Gets counts of initial words and transitions
 #We can call this on all the files we want and then calculate the probabilities
 #by looking at all the dictionaries
@@ -45,7 +45,7 @@ def probs(counts_list):
             for word2 in pair[1][word]:
                 all_transitions[word][word2]+=pair[1][word][word2]
                 #record count of each word to make probabilities easier
-                word_counts_transition[word]+=1
+                word_counts_transition[word]+=pair[1][word][word2]
     first_probabilities = collections.defaultdict(float)
     transition_probabilities = collections.defaultdict(lambda: collections.defaultdict(float))
     for word in all_first:
@@ -57,13 +57,55 @@ def probs(counts_list):
             transition_probabilities[word][word2] = all_transitions[word][word2]/word_counts_transition[word]
     return [first_probabilities,transition_probabilities]
 
+#generate probability distribution given probability of error and max distance
+def prob_distribution(error,N):
+    coefficients = []
+    #get coefficients for polynomial to solve
+    error=1-error
+    coefficients.append(error-1)
+    for i in range(N):
+        coefficients.append(error)
+    p = Polynomial(coefficients)
+    roots = p.roots()
+    #get positive root
+    for r in roots:
+        if(r.imag==0 and r.real>0):
+            coefficient = r.real
+    distribution = []
+    #calculate distribution for each number
+    for i in range(N+1):
+        distribution.append(error*pow(coefficient,i))
+    return distribution
+
+#calculate emission probability given list of words and a probability of error
+def emission_probs(words,error):
+    emissions = collections.defaultdict(lambda: collections.defaultdict(float))
+    for word in words:
+        max_distance=0
+        tmp_distance_counts = collections.defaultdict(list)
+        #for each word calculate distance from current word
+        for word2 in words:
+            distance = nltk.edit_distance(word,word2)
+            max_distance = max(distance,max_distance)
+            tmp_distance_counts[distance].append(word2)
+        #get probability distribution
+        distribution = prob_distribution(error,max_distance)
+        #populate emissions with probabilities
+        for dis in tmp_distance_counts:
+            for word2 in tmp_distance_counts[dis]:
+                emissions[word][word2]=distribution[dis]/len(tmp_distance_counts[dis])
+    return emissions
+
 # example of getting probabilities and saving to a file
 lis = []
 lis.append(counts("reut2-000.sgm"))
 lis.append(counts("reut2-001.sgm"))
 
 a = probs(lis)
+b = emission_probs(a[0].keys(),0.1)
 with open("initial_probs_example.json","w") as file:
     file.write(json.dumps(a[0]))
 with open("transition_probs_example.json", "w") as file:
     file.write(json.dumps(a[1]))
+with open("emission_probs_example.json","w") as file:
+    file.write(json.dumps(b))
