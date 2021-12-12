@@ -1,51 +1,70 @@
 #Setting up the layout body of the main HMM
 from nltk import word_tokenize, sent_tokenize
+from sklearn.model_selection import train_test_split
 import enchant #Needs to be downlaoded I think
 from viterbi import viterbi, recover_path
-from get_probs import counts, probs
+from get_probs import counts, probs, emission_probs
+from gen_errors import main
 
-def main(dataset):
-    #Preprocessing data -- train, test split, to lower case, remove weird characters
-
-    #Extract the initial and transition probabilities from data with no errors
-    counts_list = counts(dataset)
+#train -- list containing the names of the training data files
+#test -- list containing the names of the testing data files
+#get_corrections returns list of sentences corrected
+def get_corrections(train,test):
+    #Extract the initial and transition probabilities from training data
+    #counts_list is a list of tuples : dictionary probabilities init and transitions
+    counts_list = []
+    for f in train:
+        counts_list.append(counts(f))
     [initial, transitions] = probs(counts_list)
 
-    #Generate errors in the data
-    err_data = Error_fct(dataset)
+    #Extract emission probabilities from training data by
+    #generating list of words and their possible errors
+    #err_words is a list of words
+    err_words = []
+    for w in transitions.keys():
+        err_words.append(w)
+        #Make sure this is compatible with new function for all errors of a word
+        err_words.append(generate_errors(w))
+    emissions = emission_probs(err_words, 0.1)
 
-    #Extract emission probabilities from data with errors
-    emissions = Emission_fct(err_data)
+    #Generate errors in the testing data
+    #err_data is a list of sentences with errors
+    err_data = []
+    for f in test:
+        err_data.append(main(f))
 
-    #Tokenize the data into sentences
-    sentences = sent_tokenize(err_data)
-
-    #Initialize empty output data
+    #Derive smaller list of hidden states for each sentence to be corrected
     corrected_sentences = []
-
-    #Run viterbi on sentences that have misspells
-    for s in sentences:
-        #Check if the sentence has some misspelled word?
-        #--
-
+    d = enchant.Dict("en_US")
+    for s in err_data:
         #Tokenize the sentence to words
         w = word_tokenize(s)
-
-        #call the Error function on each word in w to generate all possible hidden states (corrections)
-        #OR derive a list of all different words in the data = dict
+        #Generate all possible hidden states (corrections) specific to the words in the sentence
         dict = []
         for word in w:
-            l = Error_fct(word)
+            l = generate_errors(word)
             for word_corrected in l:
-                dict.append(word_corrected)
-        #Only keep valid english words in the possible hidden states list
-        for word in dict:
-            d = enchant.Dict("en_US")
-            if not d.check(word) :
-                dict.remove(word)
-
-        #Run viterbi
+                #Only keep valid english words in the possible hidden states list
+                if d.check(word_corrected) :
+                    dict.append(word_corrected)
+        #OR use dict = err_words if we don't consider states for each sentence
+        #Run viterbi on the sentence
         (p,start) = viterbi(transitions,emissions,initial,len(dict),len(w),w,dict)
+        #Recover corrected sentence
         corrected_sentences.append(recover_path(len(w), p, dict, start))
+    return corrected_sentences
 
-    #Using corrected_sentences, perfomr evlaution measures here
+def hmm_for_correction():
+    #Separating data into testing, development set and training data
+    raw_data = ["reut2-000.sgm","reut2-001.sgm","reut2-002.sgm","reut2-003.sgm","reut2-004.sgm",
+    "reut2-005.sgm","reut2-006.sgm","reut2-007.sgm","reut2-008.sgm","reut2-009.sgm","reut2-010.sgm",
+    "reut2-011.sgm","reut2-012.sgm","reut2-013.sgm","reut2-014.sgm","reut2-015.sgm",
+    "reut2-016.sgm","reut2-017.sgm","reut2-018.sgm","reut2-019.sgm","reut2-020.sgm","reut2-021.sgm",]
+    training_data, test_data = train_test_split(raw_data,train_size=0.75,test_size=0.25)
+    dev_data, testing_data = train_test_split(test_data,train_size=0.5,test_size=0.5)
+
+    corrections = get_corrections(training_data, dev_data) #-- Training the model
+    #corrections = get_corrections(dev_data, test_data) #-- Testing
+
+    #Using corrected_sentences, perform evluation measures here
+
