@@ -1,11 +1,12 @@
 import numpy as np
 from nltk import word_tokenize
 from numpy.core.fromnumeric import argmax
+from get_probs import emission_probs
 
-#transitions : transition probs
-#emissions : emission probs
-#init : initial probs
-#N : Total number of hidden states
+#transitions : dictionary of transition probabilities
+#emissions : dictionary of emission probabilities
+#init : dictionary of initial probabilities
+#N : Total number of hidden states (lenght of dict)
 #T : length of the sentence
 #w : input words of a sentence
 #dict : all hidden states
@@ -16,37 +17,55 @@ def viterbi(transitions,emissions,init,N,T,w,dict):
 
     #Initialize first column
     for i in range(N):
-        #Account for zero probabilities not stored in the dictionary
+        #Account for unknown words not stored in the initial probabilities
         initial = init.get(dict[i])
-        e_i0 = emissions.get(dict[i]).get(w[0])
         if initial == None :
-            initial = 0
-        if e_i0 == None :
-            e_i0 = 0
+            initial = init.get("UNK")
+
+        #Account for unknown words not stored in the emission probabilities
+        if emissions.get(dict[i]) == None :
+            e_i0 = emission_probs([dict[i],w[0]], 0.1)
+        elif emissions.get(dict[i]).get(w[0]) == None :
+            e_i0 = emission_probs([dict[i],w[0]], 0.1)
+        else :
+            e_i0 = emissions.get(dict[i]).get(w[0])
         delta[i,0] = initial*e_i0
 
     #Loop over the trellis
     for t in range(1,T):
         for j in range(N):
             c = []
+            #Get all the possible scores
             for i in range(N):
-                #Get all the possible scores
-                t_ij = transitions.get(dict[i]).get(dict[j])
-                e_jt = emissions.get(dict[j]).get(w[t])
-                #Account for zero probabilities not stored in the dictionary
-                if t_ij == None :
-                    t_ij = 0
-                if e_jt == None:
-                    e_jt = 0
+                #Account for unknown words not stored in the transitions
+                #Makes sure this structure resprects the UNK token structure
+                if transitions.get(dict[i]) == None :
+                    t_ij = transitions.get("UNK").get("UNK")
+                elif transitions.get(dict[i]).get(dict[j]) == None :
+                    t_ij = transitions.get(dict[i]).get("UNK")
+                else :
+                    t_ij = transitions.get(dict[i]).get(dict[j])
+
+                #Account for unknown words not stored in the emissions
+                if emissions.get(dict[j]) == None :
+                    e_jt = emission_probs([dict[j],w[t]], 0.1)
+                elif emissions.get(dict[j]).get(w[t]) == None :
+                    e_jt = emission_probs([dict[j],w[t]], 0.1)
+                else :
+                    e_jt = emissions.get(dict[j]).get(w[t])
                 c.append(delta[i,t-1]*t_ij*e_jt)
             #Store best score and the pointer to previous cell
             delta[j,t] = max(c)
             pointers[j,t] = argmax(c)
-    print(delta)
-    #Return max of last column
+    #print(delta)
+    #Return pointers matrix and max of last column
     return (pointers, argmax(delta[:,N-1]))
 
 #Recover the best corrected sentence
+# len : length of the sentence
+# pointers : pointer matrix from viterbi
+# dict : list of hidden states
+# start : start position in the last column
 def recover_path(len,pointers,dict,start):
     path = [dict[start]]
     prev = start
