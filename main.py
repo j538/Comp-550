@@ -48,14 +48,14 @@ def get_corrections(train,test):
                 if d.check(word_corrected) :
                     dict.append(word_corrected)
         #OR use dict = err_words if we don't consider states for each sentence
-        #Run viterbi on the sentence
+        #Run Viterbi on the sentence
         (p,start) = viterbi(transitions,emissions,initial,len(dict),len(w),w,dict)
         #Recover corrected sentence
         corrected_sentences.append(recover_path(len(w), p, dict, start))
     return corrected_sentences
 
 def hmm_for_correction():
-    #Separating data into testing, development set and training data
+    #Separating data into testing, development and training data
     raw_data = ["reut2-000.sgm","reut2-001.sgm","reut2-002.sgm","reut2-003.sgm","reut2-004.sgm",
     "reut2-005.sgm","reut2-006.sgm","reut2-007.sgm","reut2-008.sgm","reut2-009.sgm","reut2-010.sgm",
     "reut2-011.sgm","reut2-012.sgm","reut2-013.sgm","reut2-014.sgm","reut2-015.sgm",
@@ -63,8 +63,8 @@ def hmm_for_correction():
     training_data, test_data = train_test_split(raw_data,train_size=0.75,test_size=0.25)
     dev_data, testing_data = train_test_split(test_data,train_size=0.5,test_size=0.5)
 
-    corrections = get_corrections(training_data, dev_data) #-- Training the model
-    #corrections = get_corrections(dev_data, test_data) #-- Testing
+    corrections = get_corrections(training_data, dev_data) # -- Training the model
+    #corrections = get_corrections(dev_data, test_data) # -- Testing
 
-    #Using corrected_sentences, perform evluation measures here
+    #Using corrected_sentences, perform evaluation measures here
 
