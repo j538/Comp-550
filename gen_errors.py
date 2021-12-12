@@ -153,15 +153,18 @@ def readData(file):
     return data
 
 
-def main():
-    data = readData("data.txt")
+def main(file_name):
+    #data = readData("data.txt")
+    data = readData(file_name)
 
     data_w_errors = []
     for sentence in data:
         data_w_errors.append(generateError(sentence))
 
-    for s in data_w_errors:
-        print(s)
+    #for s in data_w_errors:
+    #    print(s)
+    
+    return data_w_errors
 
 
 if __name__ == "__main__":
