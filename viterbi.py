@@ -1,7 +1,7 @@
 import numpy as np
 from nltk import word_tokenize
 from numpy.core.fromnumeric import argmax
-from get_probs import emission_probs
+from get_probs import emission_probs, get_single_emission_prob
 
 #transitions : dictionary of transition probabilities
 #emissions : dictionary of emission probabilities
@@ -24,9 +24,9 @@ def viterbi(transitions,emissions,init,N,T,w,dict):
 
         #Account for unknown words not stored in the emission probabilities
         if emissions.get(dict[i]) == None :
-            e_i0 = emission_probs([dict[i],w[0]], 0.1)
+            e_i0 = get_single_emission_prob([dict[i],w[0]], 0.1)
         elif emissions.get(dict[i]).get(w[0]) == None :
-            e_i0 = emission_probs([dict[i],w[0]], 0.1)
+            e_i0 = get_single_emission_prob([dict[i],w[0]], 0.1)
         else :
             e_i0 = emissions.get(dict[i]).get(w[0])
         delta[i,0] = initial*e_i0
@@ -48,9 +48,9 @@ def viterbi(transitions,emissions,init,N,T,w,dict):
 
                 #Account for unknown words not stored in the emissions
                 if emissions.get(dict[j]) == None :
-                    e_jt = emission_probs([dict[j],w[t]], 0.1)
+                    e_jt = get_single_emission_prob([dict[j],w[t]], 0.1)
                 elif emissions.get(dict[j]).get(w[t]) == None :
-                    e_jt = emission_probs([dict[j],w[t]], 0.1)
+                    e_jt = get_single_emission_prob([dict[j],w[t]], 0.1)
                 else :
                     e_jt = emissions.get(dict[j]).get(w[t])
                 c.append(delta[i,t-1]*t_ij*e_jt)
