@@ -1,10 +1,11 @@
 #Setting up the layout body of the main HMM
-from nltk import word_tokenize, sent_tokenize
+from nltk import word_tokenize
 from sklearn.model_selection import train_test_split
-import enchant #Needs to be downlaoded I think
+from spellchecker import SpellChecker
 from viterbi import viterbi, recover_path
 from get_probs import counts, probs, emission_probs
 from gen_errors import main
+from evaluation_measures import accuracy
 
 #train -- list containing the names of the training data files
 #test -- list containing the names of the testing data files
@@ -35,7 +36,7 @@ def get_corrections(train,test):
 
     #Derive smaller list of hidden states for each sentence to be corrected
     corrected_sentences = []
-    d = enchant.Dict("en_US")
+    spell = SpellChecker()
     for s in err_data:
         #Tokenize the sentence to words
         w = word_tokenize(s)
@@ -43,28 +44,27 @@ def get_corrections(train,test):
         dict = []
         for word in w:
             l = generate_errors(word)
-            for word_corrected in l:
-                #Only keep valid english words in the possible hidden states list
-                if d.check(word_corrected) :
-                    dict.append(word_corrected)
+            #Only keep valid english words in the possible hidden states list
+            dict = spell.known(l)
         #OR use dict = err_words if we don't consider states for each sentence
         #Run Viterbi on the sentence
         (p,start) = viterbi(transitions,emissions,initial,len(dict),len(w),w,dict)
         #Recover corrected sentence
         corrected_sentences.append(recover_path(len(w), p, dict, start))
-    return corrected_sentences
+    return [corrected_sentences, err_data]
 
-def hmm_for_correction():
+def main():
     #Separating data into testing, development and training data
     raw_data = ["reut2-000.sgm","reut2-001.sgm","reut2-002.sgm","reut2-003.sgm","reut2-004.sgm",
     "reut2-005.sgm","reut2-006.sgm","reut2-007.sgm","reut2-008.sgm","reut2-009.sgm","reut2-010.sgm",
     "reut2-011.sgm","reut2-012.sgm","reut2-013.sgm","reut2-014.sgm","reut2-015.sgm",
     "reut2-016.sgm","reut2-017.sgm","reut2-018.sgm","reut2-019.sgm","reut2-020.sgm","reut2-021.sgm",]
-    training_data, test_data = train_test_split(raw_data,train_size=0.75,test_size=0.25)
-    dev_data, testing_data = train_test_split(test_data,train_size=0.5,test_size=0.5)
+    training_data, test_data = train_test_split(raw_data,train_size=0.75,test_size=0.25,random_state = 0)
+    dev_data, testing_data = train_test_split(test_data,train_size=0.5,test_size=0.5,random_state = 0)
 
-    corrections = get_corrections(training_data, dev_data) # -- Training the model
+    #Getting the corrected data
+    [corrected, with_errors] = get_corrections(training_data, dev_data) # -- Training the model
     #corrections = get_corrections(dev_data, test_data) # -- Testing
 
-    #Using corrected_sentences, perform evaluation measures here
-
+    #Evaluating results
+    acc = accuracy(corrected,with_errors)
