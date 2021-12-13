@@ -49,12 +49,16 @@ def probs(counts_list):
     first_probabilities = collections.defaultdict(float)
     transition_probabilities = collections.defaultdict(lambda: collections.defaultdict(float))
     for word in all_first:
-        #calculate first probabilities
-        first_probabilities[word] = all_first[word]/num_sentences
+        num_initial_words = len(all_first.keys())
+        #calculate first probabilities with add one smoothing
+        first_probabilities[word] = (all_first[word]+1)/(num_sentences+num_initial_words)
+        first_probabilities["UNK"] = 1/(num_sentences+num_initial_words)
     for word in all_transitions:
+        num_transition_words = len(all_transitions[word].keys())
         for word2 in all_transitions[word]:
-            #calculate transition probabilities
-            transition_probabilities[word][word2] = all_transitions[word][word2]/word_counts_transition[word]
+            #calculate transition probabilities with add one smoothing
+            transition_probabilities[word][word2] = (all_transitions[word][word2]+1)/(word_counts_transition[word]+num_transition_words)
+        transition_probabilities[word]["UNK"] = 1/(word_counts_transition[word]+num_transition_words)
     return [first_probabilities,transition_probabilities]
 
 #generate probability distribution given probability of error and max distance
@@ -77,23 +81,29 @@ def prob_distribution(error,N):
         distribution.append(error*pow(coefficient,i))
     return distribution
 
+#returns dictionary of emission probailities for single word (Can use during runtime for unknown)
+def get_single_emission_prob(target,words,error):
+    emissions=collections.defaultdict(float)
+    tmp_distance_counts = collections.defaultdict(list)
+    # for each word calculate distance from current word
+    max_distance=0
+    for word2 in words:
+        distance = nltk.edit_distance(target, word2)
+        max_distance = max(distance, max_distance)
+        tmp_distance_counts[distance].append(word2)
+    # get probability distribution
+    distribution = prob_distribution(error, max_distance)
+    # populate emissions with probabilities
+    for dis in tmp_distance_counts:
+        for word2 in tmp_distance_counts[dis]:
+            emissions[word2] = distribution[dis] / len(tmp_distance_counts[dis])
+    return emissions
+
 #calculate emission probability given list of words and a probability of error
 def emission_probs(words,error):
     emissions = collections.defaultdict(lambda: collections.defaultdict(float))
     for word in words:
-        max_distance=0
-        tmp_distance_counts = collections.defaultdict(list)
-        #for each word calculate distance from current word
-        for word2 in words:
-            distance = nltk.edit_distance(word,word2)
-            max_distance = max(distance,max_distance)
-            tmp_distance_counts[distance].append(word2)
-        #get probability distribution
-        distribution = prob_distribution(error,max_distance)
-        #populate emissions with probabilities
-        for dis in tmp_distance_counts:
-            for word2 in tmp_distance_counts[dis]:
-                emissions[word][word2]=distribution[dis]/len(tmp_distance_counts[dis])
+        emissions[word]= get_single_emission_prob(word,words,error)
     return emissions
 
 # example of getting probabilities and saving to a file
