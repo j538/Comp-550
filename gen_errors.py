@@ -3,8 +3,6 @@ import string
 from datetime import datetime
 
 def extraLetter(sentence, index):
-    print("Adding a letter in: " + sentence[index])
-
     word = sentence[index]
     length_word = len(word)
 
@@ -13,7 +11,7 @@ def extraLetter(sentence, index):
     i = random.randint(0, length_word)
 
     # Generate a random letter
-    random_letter = random.choice(string.ascii_letters)
+    random_letter = random.choice(string.ascii_lowercase)
 
     # Check if i is out of range
     if i == length_word:
@@ -24,8 +22,6 @@ def extraLetter(sentence, index):
     return sentence
 
 def missingLetter(sentence, index):
-    print("Removing a letter in: " + sentence[index])
-
     word = sentence[index]
     length_word = len(word) - 1
 
@@ -50,8 +46,6 @@ def missingLetter(sentence, index):
     return sentence
 
 def characterOrder(sentence, index):
-    print("Modifying the order in: " + sentence[index])
-
     word = sentence[index]
     length_word = len(word) - 1
 
@@ -81,8 +75,6 @@ def characterOrder(sentence, index):
     return sentence
 
 def typo(sentence, index):
-    print("Introducing a typo in: " + sentence[index])
-
     word = sentence[index]
     length_word = len(word) - 1
 
@@ -91,7 +83,7 @@ def typo(sentence, index):
     i = random.randint(0, length_word)
 
     # Generate a random letter
-    random_letter = random.choice(string.ascii_letters)
+    random_letter = random.choice(string.ascii_lowercase)
 
     # Introducing the typo
     word = list(word)
@@ -99,6 +91,48 @@ def typo(sentence, index):
     sentence[index] = ''.join(word)
 
     return sentence
+
+# Generate all the possible errors of a given word
+def generateAllErrors(word):
+    word_variations = []
+    
+    # Go through every possible index of the word
+    last_index = len(word) - 1
+    letters = list(string.ascii_lowercase)
+    
+    # Extra letter
+    for i in range(last_index + 2):
+        if i < last_index + 1:
+            for j in range(26):
+                word_variations.append(word[:i] + letters[j] + word[i:])
+        else:
+            for j in range(26):
+                word_variations.append(word + letters[j])
+    
+    # Missing letter
+    for i in range(last_index + 1):
+        if i == last_index:
+            word_variations.append(word[:i])
+        else:
+            word_variations.append(word[:i] + word[i + 1:])
+    
+
+    # Character order
+    for i in range(last_index):
+        j = i + 1
+        if j == last_index:
+            word_variations.append(word[:i] + word[j] + word[i])
+        else:
+            word_variations.append(word[:i] + word[j] + word[i] + word[j + 1:])
+
+    # Typo
+    for i in range(last_index + 1):
+        for j in range(26):
+            letter = letters[j]
+            if letter != word[i]: 
+                word_variations.append(word[:i] + letter + word[i + 1:])
+
+    return word_variations
 
 """
     We have 4 possible types of error for a given word that we consider:
@@ -141,28 +175,3 @@ def generateError(sentence):
 
     sentence = ' '.join(sentence)
     return sentence
-
-
-# Read the data from the file and store each sentence in an array cell
-def readData(file):
-    data = []
-    f = open(file, "r")
-    for sentence in f:
-        data.append(sentence.strip())
-
-    return data
-
-
-def main():
-    data = readData("data.txt")
-
-    data_w_errors = []
-    for sentence in data:
-        data_w_errors.append(generateError(sentence))
-
-    for s in data_w_errors:
-        print(s)
-
-
-if __name__ == "__main__":
-    main()
