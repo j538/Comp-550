@@ -3,7 +3,7 @@ from nltk import word_tokenize, sent_tokenize
 from sklearn.model_selection import train_test_split
 from spellchecker import SpellChecker
 from bs4 import BeautifulSoup
-import json
+import json, random, collections
 from viterbi import viterbi, recover_path
 from get_probs import counts, probs, emission_probs
 from gen_errors import generateAllErrors, generateError
@@ -26,10 +26,18 @@ def get_corrections(train,test):
     #err_words is a list of words
     print("Extracting emission probabilities.")
     err_words = []
-    for w in transitions.keys():
-        err_words.append(w)
-        err_words.append(generateAllErrors(w))
-    emissions = emission_probs(err_words, 0.1)
+    #for w in transitions.keys():
+    #    err_words.append(w)
+    #    tmp_list = generateAllErrors(w)
+        #rint = random.randint(0, len(tmp_list)-1)
+    #    for t in tmp_list:
+    #        err_words.append(t)
+    #emissions = emission_probs(err_words, 0.1)
+
+    #Using precomputed emissions since too long to compute them
+    emissions = collections.defaultdict(lambda: collections.defaultdict(float))
+    with open("emission_probs_example_21.json","r") as file:
+       emissions = json.load(file)
 
     #Generate errors in the testing data
     #err_data is a list of sentences with errors
@@ -55,15 +63,20 @@ def get_corrections(train,test):
         #Tokenize the sentence to words
         w = word_tokenize(s)
         #Generate all possible hidden states (corrections) specific to the words in the sentence
-        dict = []
+        all_states = []
         for word in w:
             l = generateAllErrors(word)
             #Only keep valid english words in the possible hidden states list
-            dict = spell.known(l)
+            #Make sure this chooses the correct words only
+            known = spell.known(l)
+            #print(known)
+            for n in known:
+                all_states.append(n)
+        #print(all_states)
         #OR use dict = err_words if we don't consider states for each sentence
         #Run Viterbi on the sentence
         print("Running Viterbi.")
-        (p,start) = viterbi(transitions,emissions,initial,len(dict),len(w),w,dict)
+        (p,start) = viterbi(transitions,emissions,initial,len(all_states),len(w),w,all_states)
         #Recover corrected sentence
         print("Recovering final sentences.")
         corrected_sentences.append(recover_path(len(w), p, dict, start))
