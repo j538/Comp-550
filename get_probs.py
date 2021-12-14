@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import collections, nltk, json
 from numpy.polynomial import Polynomial
+from tqdm import tqdm
 #Gets counts of initial words and transitions
 #We can call this on all the files we want and then calculate the probabilities
 #by looking at all the dictionaries
@@ -102,7 +103,7 @@ def get_single_emission_prob(target,words,error):
 #calculate emission probability given list of words and a probability of error
 def emission_probs(words,error):
     emissions = collections.defaultdict(lambda: collections.defaultdict(float))
-    for word in words:
+    for word in tqdm(words):
         emissions[word]= get_single_emission_prob(word,words,error)
     return emissions
 
