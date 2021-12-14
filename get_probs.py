@@ -60,6 +60,8 @@ def probs(counts_list):
             #calculate transition probabilities with add one smoothing
             transition_probabilities[word][word2] = (all_transitions[word][word2]+1)/(word_counts_transition[word]+num_transition_words)
         transition_probabilities[word]["UNK"] = 1/(word_counts_transition[word]+num_transition_words)
+        transition_probabilities["UNK"][word] = 1/(num_transition_words+1)
+    transition_probabilties["UNK"]["UNK"] = 1/(num_transition_words+1)
     return [first_probabilities,transition_probabilities]
 
 #generate probability distribution given probability of error and max distance
