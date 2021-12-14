@@ -5,7 +5,7 @@ from spellchecker import SpellChecker
 from bs4 import BeautifulSoup
 import json, random, collections
 from viterbi import viterbi, recover_path
-from get_probs import counts, probs, emission_probs
+from get_probs import counts, probs, get_single_emission_prob
 from gen_errors import generateAllErrors, generateError
 from evaluation_measures import accuracy
 
@@ -25,14 +25,13 @@ def get_corrections(train,test):
     #generating list of words and their possible errors
     #err_words is a list of words
     print("Extracting emission probabilities.")
-    err_words = []
-    #for w in transitions.keys():
-    #    err_words.append(w)
-    #    tmp_list = generateAllErrors(w)
+    #err_words = []
+    #all_words = transitions.keys()
+    #emissions = collections.defaultdict(lambda: collections.defaultdict(float))
+    #for w in all_words:
+   #     tmp_list = generateAllErrors(w)
         #rint = random.randint(0, len(tmp_list)-1)
-    #    for t in tmp_list:
-    #        err_words.append(t)
-    #emissions = emission_probs(err_words, 0.1)
+   #     emissions[w] = get_single_emission_prob(w,all_words+tmp_list,0.1)
 
     #Using precomputed emissions since too long to compute them
     emissions = collections.defaultdict(lambda: collections.defaultdict(float))
