@@ -79,7 +79,8 @@ def recover_path(len,pointers,dict,start):
         new_s = new_s + " " + s
     return new_s
 
-#Testing using some small data
+"""
+Testing using some small data
 pi = {"i" : 0.6, "like" : 0.1, "movies" : 0.3}
 a = {
     "i" : {"i" : 0.1, "like" : 0.7, "movies" : 0.2},
@@ -95,3 +96,4 @@ dict = ["i","like","movies"]
 s = "i like movy"
 (p,start) = viterbi(a,b,pi,len(dict),3,word_tokenize(s),dict)
 print(recover_path(3, p, dict, start))
+"""

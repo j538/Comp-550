@@ -106,7 +106,10 @@ def emission_probs(words,error):
         emissions[word]= get_single_emission_prob(word,words,error)
     return emissions
 
-# example of getting probabilities and saving to a file
+#get_single_emission_prob("test",["testing","toast","testink"],0.1)
+
+""" 
+example of getting probabilities and saving to a file
 lis = []
 lis.append(counts("reut2-000.sgm"))
 lis.append(counts("reut2-001.sgm"))
@@ -119,3 +122,4 @@ with open("transition_probs_example.json", "w") as file:
     file.write(json.dumps(a[1]))
 with open("emission_probs_example.json","w") as file:
     file.write(json.dumps(b))
+    """

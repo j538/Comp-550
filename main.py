@@ -1,10 +1,12 @@
 #Setting up the layout body of the main HMM
-from nltk import word_tokenize
+from nltk import word_tokenize, sent_tokenize
 from sklearn.model_selection import train_test_split
 from spellchecker import SpellChecker
+from bs4 import BeautifulSoup
+import json
 from viterbi import viterbi, recover_path
 from get_probs import counts, probs, emission_probs
-from gen_errors import main
+from gen_errors import generateAllErrors, generateError
 from evaluation_measures import accuracy
 
 #train -- list containing the names of the training data files
@@ -13,6 +15,7 @@ from evaluation_measures import accuracy
 def get_corrections(train,test):
     #Extract the initial and transition probabilities from training data
     #counts_list is a list of tuples : dictionary probabilities init and transitions
+    print("Extracting initial and tranisition probabilities.")
     counts_list = []
     for f in train:
         counts_list.append(counts(f))
@@ -21,20 +24,31 @@ def get_corrections(train,test):
     #Extract emission probabilities from training data by
     #generating list of words and their possible errors
     #err_words is a list of words
+    print("Extracting emission probabilities.")
     err_words = []
     for w in transitions.keys():
         err_words.append(w)
-        #Make sure this is compatible with new function for all errors of a word
-        err_words.append(generate_errors(w))
+        err_words.append(generateAllErrors(w))
     emissions = emission_probs(err_words, 0.1)
 
     #Generate errors in the testing data
     #err_data is a list of sentences with errors
+    print("Introducing mistakes in the data.")
     err_data = []
     for f in test:
-        err_data.append(main(f))
+        f1=open(f,"r")
+        data1=f1.read()
+        soup1 = BeautifulSoup(data1,'html.parser')
+        #get all body tags (this is where articles are)
+        words = soup1.findAll('body')
+        for w in words:
+            #tokenize paragraph into sentences
+            sentences = sent_tokenize(w.text)
+            for sentence in sentences:
+                err_data.append(generateError(sentence))
 
     #Derive smaller list of hidden states for each sentence to be corrected
+    print("Selecting all hidden states.")
     corrected_sentences = []
     spell = SpellChecker()
     for s in err_data:
@@ -43,13 +57,15 @@ def get_corrections(train,test):
         #Generate all possible hidden states (corrections) specific to the words in the sentence
         dict = []
         for word in w:
-            l = generate_errors(word)
+            l = generateAllErrors(word)
             #Only keep valid english words in the possible hidden states list
             dict = spell.known(l)
         #OR use dict = err_words if we don't consider states for each sentence
         #Run Viterbi on the sentence
+        print("Running Viterbi.")
         (p,start) = viterbi(transitions,emissions,initial,len(dict),len(w),w,dict)
         #Recover corrected sentence
+        print("Recovering final sentences.")
         corrected_sentences.append(recover_path(len(w), p, dict, start))
     return [corrected_sentences, err_data]
 
@@ -63,8 +79,17 @@ def main():
     dev_data, testing_data = train_test_split(test_data,train_size=0.5,test_size=0.5,random_state = 0)
 
     #Getting the corrected data
-    [corrected, with_errors] = get_corrections(training_data, dev_data) # -- Training the model
+    #[corrected, with_errors] = get_corrections(training_data, dev_data) # -- Training the model
     #corrections = get_corrections(dev_data, test_data) # -- Testing
+
+    #Testing on some small data set
+    [corrected, with_errors] = get_corrections(["reut2-021.sgm"], ["reut2-021.sgm"])
+    #with open("corrected_data.json","w") as file:
+    #   file.write(json.dumps(corrected))
 
     #Evaluating results
     acc = accuracy(corrected,with_errors)
+    print(acc)
+
+if __name__ == "__main__":
+    main()
