@@ -24,12 +24,13 @@ def viterbi(transitions,emissions,init,N,T,w,dict):
 
         #Account for unknown words not stored in the emission probabilities
         if emissions.get(dict[i]) == None :
-            e_i0 = get_single_emission_prob([dict[i],w[0]], 0.1)
+            e_i0 = get_single_emission_prob(dict[i],w[0], 0.1)
         elif emissions.get(dict[i]).get(w[0]) == None :
-            e_i0 = get_single_emission_prob([dict[i],w[0]], 0.1)
+            e_i0 = get_single_emission_prob(dict[i],w[0], 0.1)
         else :
             e_i0 = emissions.get(dict[i]).get(w[0])
-        delta[i,0] = initial*e_i0
+        print(e_i0)
+        delta[i,0] = initial*e_i0.get(dict[i])
 
     #Loop over the trellis
     for t in range(1,T):
@@ -48,9 +49,9 @@ def viterbi(transitions,emissions,init,N,T,w,dict):
 
                 #Account for unknown words not stored in the emissions
                 if emissions.get(dict[j]) == None :
-                    e_jt = get_single_emission_prob([dict[j],w[t]], 0.1)
+                    e_jt = get_single_emission_prob(dict[j],w[t], 0.1)
                 elif emissions.get(dict[j]).get(w[t]) == None :
-                    e_jt = get_single_emission_prob([dict[j],w[t]], 0.1)
+                    e_jt = get_single_emission_prob(dict[j],w[t], 0.1)
                 else :
                     e_jt = emissions.get(dict[j]).get(w[t])
                 c.append(delta[i,t-1]*t_ij*e_jt)
