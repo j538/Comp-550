@@ -3,7 +3,7 @@ from nltk import word_tokenize, sent_tokenize
 from sklearn.model_selection import train_test_split
 from spellchecker import SpellChecker
 from bs4 import BeautifulSoup
-import json, random, collections
+import json, collections, tqdm
 from viterbi import viterbi, recover_path
 from get_probs import counts, probs, get_single_emission_prob
 from gen_errors import generateAllErrors, generateError
@@ -26,12 +26,12 @@ def get_corrections(train,test):
     #err_words is a list of words
     print("Extracting emission probabilities.")
     #err_words = []
-    #all_words = transitions.keys()
+    #all_words = [t for t in transitions.keys()]
     #emissions = collections.defaultdict(lambda: collections.defaultdict(float))
     #for w in all_words:
-   #     tmp_list = generateAllErrors(w)
+    #    tmp_list = generateAllErrors(w)
         #rint = random.randint(0, len(tmp_list)-1)
-   #     emissions[w] = get_single_emission_prob(w,all_words+tmp_list,0.1)
+    #    emissions[w] = get_single_emission_prob(w,all_words+tmp_list,0.1)
 
     #Using precomputed emissions since too long to compute them
     emissions = collections.defaultdict(lambda: collections.defaultdict(float))
@@ -60,25 +60,29 @@ def get_corrections(train,test):
     spell = SpellChecker()
     for s in err_data:
         #Tokenize the sentence to words
-        w = word_tokenize(s)
+        w = [i.lower() for i in word_tokenize(s)]
+
         #Generate all possible hidden states (corrections) specific to the words in the sentence
         all_states = []
         for word in w:
             l = generateAllErrors(word)
             #Only keep valid english words in the possible hidden states list
             #Make sure this chooses the correct words only
-            known = spell.known(l)
-            #print(known)
-            for n in known:
+            english_words = spell.known(l)
+            #print(english_words)
+            for n in english_words:
                 all_states.append(n)
         #print(all_states)
         #OR use dict = err_words if we don't consider states for each sentence
         #Run Viterbi on the sentence
-        print("Running Viterbi.")
-        (p,start) = viterbi(transitions,emissions,initial,len(all_states),len(w),w,all_states)
+        print(f"Running Viterbi on :  {w}")
+        length_sentence = len(w)
+        (p,start) = viterbi(transitions,emissions,initial,len(all_states),length_sentence,w,all_states)
         #Recover corrected sentence
-        print("Recovering final sentences.")
-        corrected_sentences.append(recover_path(len(w), p, dict, start))
+        print("Recovering final sentence")
+        new_sentence = recover_path(length_sentence, p, all_states, start)
+        corrected_sentences.append(new_sentence)
+        print("Got sentence : " + new_sentence)
     return [corrected_sentences, err_data]
 
 def main():
