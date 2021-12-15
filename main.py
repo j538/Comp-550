@@ -5,7 +5,7 @@ from spellchecker import SpellChecker
 from bs4 import BeautifulSoup
 import json, collections, tqdm
 from viterbi import viterbi, recover_path
-from get_probs import counts, emission_probs, probs, get_single_emission_prob
+from get_probs import counts, probs, get_single_emission_prob
 from gen_errors import generateAllErrors, generateError
 from evaluation_measures import accuracy
 
@@ -23,24 +23,20 @@ def get_corrections(train,test):
 
     #Extract emission probabilities from training data by
     #generating list of words and their possible errors
-
-    #Option 1 : Pass all words (takes too long)
-    #Option 0 : Pass empty emissions and fill them in viterbi with only the ones we need
+    #err_words is a list of words
     print("Extracting emission probabilities.")
-    all_words = [t for t in transitions.keys()]
-    emissions = collections.defaultdict(lambda: collections.defaultdict(float))
+    #err_words = []
+    #all_words = [t for t in transitions.keys()]
+    #emissions = collections.defaultdict(lambda: collections.defaultdict(float))
     #for w in all_words:
     #    tmp_list = generateAllErrors(w)
+        #rint = random.randint(0, len(tmp_list)-1)
     #    emissions[w] = get_single_emission_prob(w,all_words+tmp_list,0.1)
-    
-    #Option 2 : Passing only the error words to emissions
-        #emissions[w] = get_single_emission_prob(w,tmp_list,0.1)
-    #Using precomputed emissions since too long to compute them
 
-    #Option 4 : Backup : use predefined emissions
+    #Using precomputed emissions since too long to compute them
     emissions = collections.defaultdict(lambda: collections.defaultdict(float))
     with open("emission_probs_example_21.json","r") as file:
-        emissions = json.load(file)
+       emissions = json.load(file)
 
     #Generate errors in the testing data
     #err_data is a list of sentences with errors
@@ -56,43 +52,34 @@ def get_corrections(train,test):
             #tokenize paragraph into sentences
             sentences = sent_tokenize(w.text)
             for sentence in sentences:
-                if len(word_tokenize(sentence)) >= 5:
-                    err_data.append(generateError(sentence))
+                err_data.append(generateError(sentence))
 
     #Derive smaller list of hidden states for each sentence to be corrected
+    print("Selecting all hidden states.")
     corrected_sentences = []
+    spell = SpellChecker()
     for s in err_data:
-        #Tokenize the sentence to words and remove non letter characters
-        w = [word.lower() for word in word_tokenize(s)]
-        for word in w :
-            if not word.isalnum() :
-                w.remove(word)
+        #Tokenize the sentence to words
+        w = [i.lower() for i in word_tokenize(s)]
 
         #Generate all possible hidden states (corrections) specific to the words in the sentence
-        spell = SpellChecker(language='en')
-        spell.word_frequency.load_words("reuter")
         all_states = []
         for word in w:
+            l = generateAllErrors(word)
             #Only keep valid english words in the possible hidden states list
-            if len(spell.unknown([word])) == 1:
-                l = generateAllErrors(word)
-                wrong_words = spell.unknown(l)
-                for n in l:
-                    if not n in wrong_words:
-                        all_states.append(n)
-                #if len(all_states) == 0:
-                    #all_states.append(word)
-            else :
-                all_states.append(word)
+            #Make sure this chooses the correct words only
+            english_words = spell.known(l)
+            #print(english_words)
+            for n in english_words:
+                all_states.append(n)
         #print(all_states)
+        #OR use dict = err_words if we don't consider states for each sentence
         #Run Viterbi on the sentence
-        print("-------------------------------------------------------------------------------------------")
         print(f"Running Viterbi on :  {w}")
         length_sentence = len(w)
-        #print(all_states)
         (p,start) = viterbi(transitions,emissions,initial,len(all_states),length_sentence,w,all_states)
-        
         #Recover corrected sentence
+        print("Recovering final sentence")
         new_sentence = recover_path(length_sentence, p, all_states, start)
         corrected_sentences.append(new_sentence)
         print("Got sentence : " + new_sentence)
@@ -112,7 +99,7 @@ def main():
     #corrections = get_corrections(dev_data, test_data) # -- Testing
 
     #Testing on some small data set
-    [corrected, with_errors] = get_corrections(["reut2-021.sgm","reut2-000.sgm"], ["reut2-021.sgm"])
+    [corrected, with_errors] = get_corrections(["reut2-021.sgm"], ["reut2-021.sgm"])
     #with open("corrected_data.json","w") as file:
     #   file.write(json.dumps(corrected))
 
