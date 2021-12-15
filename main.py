@@ -56,7 +56,8 @@ def get_corrections(train,test):
             #tokenize paragraph into sentences
             sentences = sent_tokenize(w.text)
             for sentence in sentences:
-                err_data.append(generateError(sentence))
+                if len(word_tokenize(sentence)) >= 5:
+                    err_data.append(generateError(sentence))
 
     #Derive smaller list of hidden states for each sentence to be corrected
     corrected_sentences = []
@@ -69,6 +70,7 @@ def get_corrections(train,test):
 
         #Generate all possible hidden states (corrections) specific to the words in the sentence
         spell = SpellChecker(language='en')
+        spell.word_frequency.load_words("reuter")
         all_states = []
         for word in w:
             #Only keep valid english words in the possible hidden states list
@@ -78,6 +80,8 @@ def get_corrections(train,test):
                 for n in l:
                     if not n in wrong_words:
                         all_states.append(n)
+                #if len(all_states) == 0:
+                    #all_states.append(word)
             else :
                 all_states.append(word)
         #print(all_states)
@@ -85,6 +89,7 @@ def get_corrections(train,test):
         print("-------------------------------------------------------------------------------------------")
         print(f"Running Viterbi on :  {w}")
         length_sentence = len(w)
+        #print(all_states)
         (p,start) = viterbi(transitions,emissions,initial,len(all_states),length_sentence,w,all_states)
         
         #Recover corrected sentence
