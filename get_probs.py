@@ -70,6 +70,8 @@ def probs(counts_list):
 
 #generate probability distribution given probability of error and max distance
 def prob_distribution(error,N):
+    if N==0:
+        return [1]
     coefficients = []
     #get coefficients for polynomial to solve
     error=1-error
