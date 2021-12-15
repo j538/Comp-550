@@ -21,6 +21,10 @@ def counts(data):
         sentences = nltk.sent_tokenize(w.text)
         for sentence in sentences:
             words = nltk.word_tokenize(sentence)
+            # Check if the word is all alphanumeric and in lowercase
+            for word in words:
+                word.lower()
+                word = ''.join(c for c in word if c.isalnum())
             #add to count of first word
             first[words[0].lower()]+=1
             #go through sentence and add transition occurrences

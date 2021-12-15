@@ -172,6 +172,10 @@ def generateError(sentence):
     else:
         typo(sentence, index)
 
+    # Make sure that the data is alphanumeric and in lowercase
+    for word in sentence:
+        word.lower()
+        word = ''.join(c for c in word if c.isalnum())
 
     sentence = ' '.join(sentence)
     return sentence
