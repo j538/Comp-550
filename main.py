@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 from spellchecker import SpellChecker
 from bs4 import BeautifulSoup
 import json, collections, tqdm
+from eval import evaluate_accuracy
 from viterbi import viterbi, recover_path
 from get_probs import counts, probs, get_single_emission_prob
 from gen_errors import generateAllErrors, generateError
@@ -35,8 +36,15 @@ def get_corrections(train,test):
 
     #Using precomputed emissions since too long to compute them
     emissions = collections.defaultdict(lambda: collections.defaultdict(float))
-    with open("emission_probs_example_21.json","r") as file:
+    with open("full_emissions.json","r") as file:
        emissions = json.load(file)
+
+    from zipfile import ZipFile
+    #with ZipFile("full_emissions.zip","r") as zip_file:
+        #tmp = zip_file.read("full_emissions.json")
+    #    with zip_file.open("full_emissions.json") as file:
+    #        f = file.read()
+    #        emissions = json.loads(f.decode("utf-8"))
 
     #Generate errors in the testing data
     #err_data is a list of sentences with errors
@@ -52,34 +60,40 @@ def get_corrections(train,test):
             #tokenize paragraph into sentences
             sentences = sent_tokenize(w.text)
             for sentence in sentences:
-                err_data.append(generateError(sentence))
+                if len(word_tokenize(sentence)) >= 5:
+                    err_data.append(generateError(sentence))
 
     #Derive smaller list of hidden states for each sentence to be corrected
     print("Selecting all hidden states.")
     corrected_sentences = []
-    spell = SpellChecker()
     for s in err_data:
-        #Tokenize the sentence to words
-        w = [i.lower() for i in word_tokenize(s)]
+        #Tokenize the sentence to words and remove non letter characters
+        w = [word.lower() for word in word_tokenize(s)]
+        for word in w :
+            if not word.isalnum() :
+                w.remove(word)
 
         #Generate all possible hidden states (corrections) specific to the words in the sentence
         all_states = []
+        spell = SpellChecker()
+        spell.word_frequency.load_words("reuter")
         for word in w:
-            l = generateAllErrors(word)
-            #Only keep valid english words in the possible hidden states list
-            #Make sure this chooses the correct words only
-            english_words = spell.known(l)
-            #print(english_words)
-            for n in english_words:
-                all_states.append(n)
+            if len(spell.unknown([word])) == 1:
+                l = generateAllErrors(word)
+                wrong_words = spell.unknown(l)
+                for n in l:
+                    if not n in wrong_words:
+                        all_states.append(n)
+            else :
+                all_states.append(word)
         #print(all_states)
         #OR use dict = err_words if we don't consider states for each sentence
         #Run Viterbi on the sentence
+        print("-------------------------------------------------------------------------------------------")
         print(f"Running Viterbi on :  {w}")
         length_sentence = len(w)
         (p,start) = viterbi(transitions,emissions,initial,len(all_states),length_sentence,w,all_states)
         #Recover corrected sentence
-        print("Recovering final sentence")
         new_sentence = recover_path(length_sentence, p, all_states, start)
         corrected_sentences.append(new_sentence)
         print("Got sentence : " + new_sentence)
@@ -105,7 +119,9 @@ def main():
 
     #Evaluating results
     acc = accuracy(corrected,with_errors)
-    print(acc)
+    (correct, new_errors, failed) = evaluate_accuracy(testing_data,with_errors,corrected)
+    print("Overall performance : ")
+    print("correctly modified : {correct}, new errors introduced : {new_errors}, failed correcting : {failed}")
 
 if __name__ == "__main__":
     main()
