@@ -22,9 +22,7 @@ def get_corrections(train,test):
         counts_list.append(counts(f))
     [initial, transitions] = probs(counts_list)
 
-    #Extract emission probabilities from training data by
-    #generating list of words and their possible errors
-    #err_words is a list of words
+    #Extract emission probabilities from training data
     print("Extracting emission probabilities.")
     #err_words = []
     #all_words = [t for t in transitions.keys()]
@@ -34,12 +32,13 @@ def get_corrections(train,test):
         #rint = random.randint(0, len(tmp_list)-1)
     #    emissions[w] = get_single_emission_prob(w,all_words+tmp_list,0.1)
 
-    #Using precomputed emissions since too long to compute them
+    #Using precomputed emissions since too long to compute them every time
     emissions = collections.defaultdict(lambda: collections.defaultdict(float))
     with open("full_emissions.json","r") as file:
        emissions = json.load(file)
 
-    from zipfile import ZipFile
+    #This was used to unzip the emissions
+    #from zipfile import ZipFile
     #with ZipFile("full_emissions.zip","r") as zip_file:
         #tmp = zip_file.read("full_emissions.json")
     #    with zip_file.open("full_emissions.json") as file:
@@ -86,13 +85,13 @@ def get_corrections(train,test):
                         all_states.append(n)
             else :
                 all_states.append(word)
-        #print(all_states)
-        #OR use dict = err_words if we don't consider states for each sentence
+
         #Run Viterbi on the sentence
         print("-------------------------------------------------------------------------------------------")
         print(f"Running Viterbi on :  {w}")
         length_sentence = len(w)
         (p,start) = viterbi(transitions,emissions,initial,len(all_states),length_sentence,w,all_states)
+        
         #Recover corrected sentence
         new_sentence = recover_path(length_sentence, p, all_states, start)
         corrected_sentences.append(new_sentence)
@@ -100,28 +99,28 @@ def get_corrections(train,test):
     return [corrected_sentences, err_data]
 
 def main():
-    #Separating data into testing, development and training data
+    #Separating data into testing and training data
     raw_data = ["reut2-000.sgm","reut2-001.sgm","reut2-002.sgm","reut2-003.sgm","reut2-004.sgm",
     "reut2-005.sgm","reut2-006.sgm","reut2-007.sgm","reut2-008.sgm","reut2-009.sgm","reut2-010.sgm",
     "reut2-011.sgm","reut2-012.sgm","reut2-013.sgm","reut2-014.sgm","reut2-015.sgm",
     "reut2-016.sgm","reut2-017.sgm","reut2-018.sgm","reut2-019.sgm","reut2-020.sgm","reut2-021.sgm",]
     training_data, test_data = train_test_split(raw_data,train_size=0.75,test_size=0.25,random_state = 0)
-    dev_data, testing_data = train_test_split(test_data,train_size=0.5,test_size=0.5,random_state = 0)
+    #dev_data, testing_data = train_test_split(test_data,train_size=0.5,test_size=0.5,random_state = 0)
 
     #Getting the corrected data
-    #[corrected, with_errors] = get_corrections(training_data, dev_data) # -- Training the model
-    #corrections = get_corrections(dev_data, test_data) # -- Testing
+    #[corrected, with_errors] = get_corrections(training_data,["reut2-021.sgm"]) # -- Training the model
+    [corrected, with_errors] = get_corrections(["reut2-021.sgm"],["reut2-021.sgm"]) ##--Training on small dataset
+    #corrections = get_corrections(training_data, test_data) # -- Final testing
 
-    #Testing on some small data set
-    [corrected, with_errors] = get_corrections(["reut2-021.sgm"], ["reut2-021.sgm"])
-    #with open("corrected_data.json","w") as file:
-    #   file.write(json.dumps(corrected))
+    #Write the obtained data to a file so that we only have to run it once
+    with open("corrected_data.json","w") as file:
+       file.write(json.dumps(corrected))
 
     #Evaluating results
     acc = accuracy(corrected,with_errors)
-    (correct, new_errors, failed) = evaluate_accuracy(testing_data,with_errors,corrected)
+    (correct, new_errors, failed) = evaluate_accuracy(test_data,with_errors,corrected)
     print("Overall performance : ")
-    print("correctly modified : {correct}, new errors introduced : {new_errors}, failed correcting : {failed}")
+    print("correctly modified : {correct}, new errors introduced : {new_errors}, failed correcting : {failed}, accuracy : {acc}")
 
 if __name__ == "__main__":
     main()
