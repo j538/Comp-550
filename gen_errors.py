@@ -151,6 +151,12 @@ def generateError(sentence):
     random.seed(datetime.now())
     error_type = random.randint(0, 3)
 
+    #Fix the type error
+    #error_type = 0
+    #error_type = 1
+    #error_type = 2
+    #error_type = 3
+
     # Pick random word in sentence 
     random.seed(datetime.now())
     index = random.randint(0, length)
