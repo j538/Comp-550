@@ -24,18 +24,3 @@ def evaluate_accuracy(original, w_errors, corrected):
                 failed_corrections += 1
 
     return correctly_modified, new_errors, failed_corrections
-
-
-def main():
-    original = ["i love my playstation", "i cannot wait to watch the new spiderman", "winter is great", "the fall semester is almost over"]
-    w_errors = ["i loe myg playstation", "i cannot ait to wacth the niw spiderman", "winter is grat", "the falli semester is almot oevr"]
-    corrected = ["i loved my playstations", "i cannot wait to watch the new spidermen", "winter is great", "the fall semester is almost done"]
-
-    correctly_modified, new_errors, failed_corrections = evaluate_accuracy(original, w_errors, corrected)
-
-    print("Correctly modified: " + str(correctly_modified))
-    print("New errors: " + str(new_errors))
-    print("Failed corrections: " + str(failed_corrections))
-
-if __name__ == "__main__":
-    main()
