@@ -4,11 +4,10 @@ from sklearn.model_selection import train_test_split
 from spellchecker import SpellChecker
 from bs4 import BeautifulSoup
 import json, collections, tqdm
-from eval import evaluate_accuracy
+from eval import evaluate_accuracy, accuracy
 from viterbi import viterbi, recover_path
-from get_probs import counts, probs, get_single_emission_prob
+from get_probs import counts, probs
 from gen_errors import generateAllErrors, generateError
-from evaluation_measures import accuracy
 
 #train -- list containing the names of the training data files
 #test -- list containing the names of the testing data files
@@ -105,22 +104,23 @@ def main():
     "reut2-011.sgm","reut2-012.sgm","reut2-013.sgm","reut2-014.sgm","reut2-015.sgm",
     "reut2-016.sgm","reut2-017.sgm","reut2-018.sgm","reut2-019.sgm","reut2-020.sgm","reut2-021.sgm",]
     training_data, test_data = train_test_split(raw_data,train_size=0.75,test_size=0.25,random_state = 0)
-    #dev_data, testing_data = train_test_split(test_data,train_size=0.5,test_size=0.5,random_state = 0)
 
     #Getting the corrected data
     #[corrected, with_errors] = get_corrections(training_data,["reut2-021.sgm"]) # -- Training the model
-    [corrected, with_errors] = get_corrections(["reut2-021.sgm"],["reut2-021.sgm"]) ##--Training on small dataset
-    #corrections = get_corrections(training_data, test_data) # -- Final testing
+    #[corrected, with_errors] = get_corrections(["reut2-021.sgm"],["reut2-021.sgm"]) #--Training on small dataset
+    #[corrected, with_errors] = get_corrections(training_data, test_data) # -- Final testing
 
     #Write the obtained data to a file so that we only have to run it once
-    with open("corrected_data.json","w") as file:
-       file.write(json.dumps(corrected))
-
+    #with open("corrected_data.json","w") as file:
+    #   file.write(json.dumps(corrected))
+    
     #Evaluating results
-    acc = accuracy(corrected,with_errors)
+    evaluate_results(test_data)
+
+def evaluate_results(test):
     test_data_alphanumeric = []
     #Chg test_data to alphanumeric and we remove sentences < 5 
-    for s in test_data:
+    for s in test:
         if len(s) >= 5:
             words = s.split()
             for w in words:
@@ -129,9 +129,97 @@ def main():
             words = ' '.join(words)
             test_data_alphanumeric.append(words)
 
-    (correct, new_errors, failed) = evaluate_accuracy(test_data_alphanumeric,with_errors,corrected)
-    print("Overall performance : ")
-    print("correctly modified : {correct}, new errors introduced : {new_errors}, failed correcting : {failed}, accuracy : {acc}")
+    #Access the error data for all types of errors
+    with open("with_errors.json","r") as file:
+        with_errors = json.load(file)
+    with open("with_errors_error_type0.json","r") as file:
+        with_errors0 = json.load(file)
+    with open("with_errors_error_type1.json","r") as file:
+        with_errors1 = json.load(file)
+    with open("with_errors_error_type2.json","r") as file:
+        with_errors2 = json.load(file)
+    with open("with_errors_error_type3.json","r") as file:
+        with_errors3 = json.load(file)
+
+    #Change the error data to alphanumeric
+    err_data = []
+    for s in with_errors:
+        words = s.split()
+        for w in words:
+            w.lower()
+            w = ''.join(c for c in w if c.isalnum())
+        words = ' '.join(words)
+        err_data.append(words)
+    err_data0 = []
+    for s in with_errors0:
+        words = s.split()
+        for w in words:
+            w.lower()
+            w = ''.join(c for c in w if c.isalnum())
+        words = ' '.join(words)
+        err_data0.append(words)
+    err_data1 = []
+    for s in with_errors1:
+        words = s.split()
+        for w in words:
+            w.lower()
+            w = ''.join(c for c in w if c.isalnum())
+        words = ' '.join(words)
+        err_data1.append(words)
+    err_data2 = []
+    for s in with_errors2:
+        words = s.split()
+        for w in words:
+            w.lower()
+            w = ''.join(c for c in w if c.isalnum())
+        words = ' '.join(words)
+        err_data2.append(words)
+    err_data3 = []
+    for s in with_errors3:
+        words = s.split()
+        for w in words:
+            w.lower()
+            w = ''.join(c for c in w if c.isalnum())
+        words = ' '.join(words)
+        err_data3.append(words)
+
+    #Access the corrected data
+    with open("corrected_data.json","r") as f:
+        corrected = json.load(f)
+    with open("corrected_data_error_type0.json","r") as f:
+        corrected_0 = json.load(f)
+    with open("corrected_data_error_type1.json","r") as f:
+        corrected_1 = json.load(f)
+    with open("corrected_data_error_type2.json","r") as f:
+        corrected_2 = json.load(f)
+    with open("corrected_data_error_type3.json","r") as f:
+        corrected_3 = json.load(f)
+
+    print("Getting accuracy")
+    acc = accuracy(corrected,err_data)
+    acc0 = accuracy(corrected_0,err_data0)
+    acc1 = accuracy(corrected_1,err_data1)
+    acc2 = accuracy(corrected_2,err_data2)
+    acc3 = accuracy(corrected_3,err_data3)
+
+    print("Getting all eval stats")
+    correct, new_errors, failed = evaluate_accuracy(test_data_alphanumeric,err_data,corrected)
+    correct0, new_errors0, failed0 = evaluate_accuracy(test_data_alphanumeric,err_data0,corrected_0)
+    correct1, new_errors1, failed1 = evaluate_accuracy(test_data_alphanumeric,err_data1,corrected_1)
+    correct2, new_errors2, failed2 = evaluate_accuracy(test_data_alphanumeric,err_data2,corrected_2)
+    correct3, new_errors3, failed3 = evaluate_accuracy(test_data_alphanumeric,err_data3,corrected_3)
+    
+    print("Overall performance all mistakes : ")
+    print(f"correctly modified : {correct}, new errors introduced : {new_errors}, failed correcting : {failed}, accuracy : {acc}")
+    print("Overall performance extra letter : ")
+    print(f"correctly modified : {correct0}, new errors introduced : {new_errors0}, failed correcting : {failed0}, accuracy : {acc0}")
+    print("Overall performance missing letter : ")
+    print(f"correctly modified : {correct1}, new errors introduced : {new_errors1}, failed correcting : {failed1}, accuracy : {acc1}")
+    print("Overall performance consecutive characters reversed: ")
+    print(f"correctly modified : {correct2}, new errors introduced : {new_errors2}, failed correcting : {failed2}, accuracy : {acc2}")
+    print("Overall performance typo : ")
+    print(f"correctly modified : {correct3}, new errors introduced : {new_errors3}, failed correcting : {failed3}, accuracy : {acc3}")
+
 
 if __name__ == "__main__":
     main()
