@@ -118,7 +118,18 @@ def main():
 
     #Evaluating results
     acc = accuracy(corrected,with_errors)
-    (correct, new_errors, failed) = evaluate_accuracy(test_data,with_errors,corrected)
+    test_data_alphanumeric = []
+    #Chg test_data to alphanumeric and we remove sentences < 5 
+    for s in test_data:
+        if len(s) >= 5:
+            words = s.split()
+            for w in words:
+                w.lower()
+                w = ''.join(c for c in w if c.isalnum())
+            words = ' '.join(words)
+            test_data_alphanumeric.append(words)
+
+    (correct, new_errors, failed) = evaluate_accuracy(test_data_alphanumeric,with_errors,corrected)
     print("Overall performance : ")
     print("correctly modified : {correct}, new errors introduced : {new_errors}, failed correcting : {failed}, accuracy : {acc}")
 
