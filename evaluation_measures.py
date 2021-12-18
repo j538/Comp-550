@@ -12,13 +12,13 @@ def accuracy(corrected, with_errors):
         #Tokenize sentence into list of words
         s_w = word_tokenize(corrected[i])
         t_w = word_tokenize(with_errors[i])
-        print(s_w,t_w)
+        #print(s_w,t_w)
         #Compute number of mistakes in sentence before and after correction
         num_mistakes = len(spell.unknown(t_w))
         num_mistakes_after = len(spell.unknown(s_w))
         #Update numerator and denominator
         num += num_mistakes - num_mistakes_after #if this is negative : introduced new errors
-        print(num_mistakes)
+        #print(num_mistakes)
         denom += num_mistakes
     return num/denom
 
