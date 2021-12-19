@@ -133,15 +133,15 @@ def main():
     #Getting the corrected data
     #[corrected, with_errors] = get_corrections(training_data,["reut2-021.sgm"]) # -- Training the model
     #[corrected, with_errors] = get_corrections(["reut2-021.sgm"],["reut2-021.sgm"]) #--Training on small dataset
-    [corrected, with_errors] = get_corrections(training_data, test_data) # -- Final testing
+    #[corrected, with_errors] = get_corrections(training_data, test_data) # -- Final testing
 
     #Write the obtained data to a file so that we only have to run it once
-    with open("corrected_data_error_type0_v2.json","w") as file:
-       file.write(json.dumps(corrected))
-    with open("with_errors_type0_v2.json","w") as file:
-        file.write(json.dumps(with_errors))
+    #with open("corrected_data_error_type0_v2.json","w") as file:
+    #   file.write(json.dumps(corrected))
+    #with open("with_errors_type0_v2.json","w") as file:
+    #    file.write(json.dumps(with_errors))
     #Evaluating results
-    #evaluate_results(test_data)
+    evaluate_results(test_data)
 
 def evaluate_results(test):
     test_data_alphanumeric = []
@@ -154,7 +154,7 @@ def evaluate_results(test):
         for b in body:
             sentences = sent_tokenize(b.text)
             for sentence in sentences:
-                sentence = sentence.split()
+                sentence = word_tokenize(sentence)
                 if len(sentence) >= 5:
                     for i in range(len(sentence)):
                         sentence[i] = sentence[i].lower()
@@ -165,7 +165,7 @@ def evaluate_results(test):
     #Access the error data for all types of errors
     with open("with_errors.json","r") as file:
         with_errors = json.load(file)
-    with open("with_errors_error_type0.json","r") as file:
+    with open("with_errors_type0_v2.json","r") as file:
         with_errors0 = json.load(file)
     with open("with_errors_error_type1.json","r") as file:
         with_errors1 = json.load(file)
@@ -219,7 +219,7 @@ def evaluate_results(test):
     #Access the corrected data
     with open("corrected_data.json","r") as f:
         corrected = json.load(f)
-    with open("corrected_data_error_type0.json","r") as f:
+    with open("corrected_data_error_type0_v2.json","r") as f:
         corrected_0 = json.load(f)
     with open("corrected_data_error_type1.json","r") as f:
         corrected_1 = json.load(f)
@@ -228,31 +228,24 @@ def evaluate_results(test):
     with open("corrected_data_error_type3.json","r") as f:
         corrected_3 = json.load(f)
 
-    print("Getting accuracy")
-    acc = accuracy(corrected,err_data)
-    #acc0 = accuracy(corrected_0,err_data0)
-    #acc1 = accuracy(corrected_1,err_data1)
-    #acc2 = accuracy(corrected_2,err_data2)
-    #acc3 = accuracy(corrected_3,err_data3)
-
     print("Getting all eval stats")
-    correct, new_errors, failed = evaluate_accuracy(test_data_alphanumeric,err_data,corrected)
-    #correct0, new_errors0, failed0 = evaluate_accuracy(test_data_alphanumeric,err_data0,corrected_0)
+    #correct, new_errors, failed = evaluate_accuracy(test_data_alphanumeric,err_data,corrected)
+    correct0, new_errors0, failed0 = evaluate_accuracy(test_data_alphanumeric,err_data0,corrected_0)
     #correct1, new_errors1, failed1 = evaluate_accuracy(test_data_alphanumeric,err_data1,corrected_1)
     #correct2, new_errors2, failed2 = evaluate_accuracy(test_data_alphanumeric,err_data2,corrected_2)
     #correct3, new_errors3, failed3 = evaluate_accuracy(test_data_alphanumeric,err_data3,corrected_3)
 
-    print("Overall performance all mistakes : ")
-    print(f"correctly modified : {correct}, new errors introduced : {new_errors}, failed correcting : {failed}, accuracy : {acc}")
-    """
+    #print("Overall performance all mistakes : ")
+    #print(f"correctly modified : {correct}, new errors introduced : {new_errors}, failed correcting : {failed}")
     print("Overall performance extra letter : ")
-    print(f"correctly modified : {correct0}, new errors introduced : {new_errors0}, failed correcting : {failed0}, accuracy : {acc0}")
+    print(f"correctly modified : {correct0}, new errors introduced : {new_errors0}, failed correcting : {failed0}")
+    """
     print("Overall performance missing letter : ")
-    print(f"correctly modified : {correct1}, new errors introduced : {new_errors1}, failed correcting : {failed1}, accuracy : {acc1}")
+    print(f"correctly modified : {correct1}, new errors introduced : {new_errors1}, failed correcting : {failed1}")
     print("Overall performance consecutive characters reversed: ")
-    print(f"correctly modified : {correct2}, new errors introduced : {new_errors2}, failed correcting : {failed2}, accuracy : {acc2}")
+    print(f"correctly modified : {correct2}, new errors introduced : {new_errors2}, failed correcting : {failed2}")
     print("Overall performance typo : ")
-    print(f"correctly modified : {correct3}, new errors introduced : {new_errors3}, failed correcting : {failed3}, accuracy : {acc3}")
+    print(f"correctly modified : {correct3}, new errors introduced : {new_errors3}, failed correcting : {failed3}")
     """
 
 if __name__ == "__main__":
