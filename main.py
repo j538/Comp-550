@@ -33,7 +33,7 @@ def get_corrections(train,test):
 
     #Using precomputed emissions since too long to compute them every time
     emissions = collections.defaultdict(lambda: collections.defaultdict(float))
-    with open("full_emissions.json","r") as file:
+    with open("emission_probs_v2.json","r") as file:
        emissions = json.load(file)
 
     #This was used to unzip the emissions
@@ -59,15 +59,39 @@ def get_corrections(train,test):
             sentences = sent_tokenize(w.text)
             for sentence in sentences:
                 if len(word_tokenize(sentence)) >= 5:
-                    for i in range(len(sentence)):
-                        sentence[i] = sentence[i].lower()
-                        sentence[i] = ''.join(c for c in sentence[i] if c.isalnum())
+                    sentence = ' '.join(c.lower() for c in word_tokenize(sentence) if c.isalnum())
                     err_data.append(generateError(sentence))
 
     #Derive smaller list of hidden states for each sentence to be corrected
     print("Selecting all hidden states.")
     corrected_sentences = []
-    for s in err_data:
+    spell = SpellChecker()
+    spell.word_frequency.load_words("reuter")
+    tmp=[]
+    #Add proper nouns in data to spellchecker
+    with open("all-places-strings.lc.txt") as file:
+        tmp = file.readlines()
+    for line in tmp:
+        spell.word_frequency.load_words(line.split())
+    with open("all-exchanges-strings.lc.txt") as file:
+        tmp = file.readlines()
+    for line in tmp:
+        spell.word_frequency.load_words(line.split())
+    with open("all-orgs-strings.lc.txt") as file:
+        tmp = file.readlines()
+    for line in tmp:
+        spell.word_frequency.load_words(line.split())
+    with open("all-people-strings.lc.txt") as file:
+        tmp = file.readlines()
+    for line in tmp:
+        spell.word_frequency.load_words(line.split())
+    with open("all-topics-strings.lc.txt") as file:
+        tmp = file.readlines()
+    for line in tmp:
+        spell.word_frequency.load_words(line.split())
+    spell.word_frequency.load_words(tmp)
+    
+    for s in tqdm.tqdm(err_data):
         #Tokenize the sentence to words and remove non letter characters
         w = [word.lower() for word in word_tokenize(s)]
         for word in w :
@@ -76,8 +100,6 @@ def get_corrections(train,test):
 
         #Generate all possible hidden states (corrections) specific to the words in the sentence
         all_states = []
-        spell = SpellChecker()
-        spell.word_frequency.load_words("reuter")
         for word in w:
             if len(spell.unknown([word])) == 1:
                 l = generateAllErrors(word)
@@ -89,15 +111,15 @@ def get_corrections(train,test):
                 all_states.append(word)
 
         #Run Viterbi on the sentence
-        print("-------------------------------------------------------------------------------------------")
-        print(f"Running Viterbi on :  {w}")
+        #print("-------------------------------------------------------------------------------------------")
+        #print(f"Running Viterbi on :  {w}")
         length_sentence = len(w)
         (p,start) = viterbi(transitions,emissions,initial,len(all_states),length_sentence,w,all_states)
         
         #Recover corrected sentence
         new_sentence = recover_path(length_sentence, p, all_states, start)
         corrected_sentences.append(new_sentence)
-        print("Got sentence : " + new_sentence)
+        #print("Got sentence : " + new_sentence)
     return [corrected_sentences, err_data]
 
 def main():
@@ -111,14 +133,15 @@ def main():
     #Getting the corrected data
     #[corrected, with_errors] = get_corrections(training_data,["reut2-021.sgm"]) # -- Training the model
     #[corrected, with_errors] = get_corrections(["reut2-021.sgm"],["reut2-021.sgm"]) #--Training on small dataset
-    #[corrected, with_errors] = get_corrections(training_data, test_data) # -- Final testing
+    [corrected, with_errors] = get_corrections(training_data, test_data) # -- Final testing
 
     #Write the obtained data to a file so that we only have to run it once
-    #with open("corrected_data.json","w") as file:
-    #   file.write(json.dumps(corrected))
-    
+    with open("corrected_data_error_type0_v2.json","w") as file:
+       file.write(json.dumps(corrected))
+    with open("with_errors_type0_v2.json","w") as file:
+        file.write(json.dumps(with_errors))
     #Evaluating results
-    evaluate_results(test_data)
+    #evaluate_results(test_data)
 
 def evaluate_results(test):
     test_data_alphanumeric = []
