@@ -59,6 +59,9 @@ def get_corrections(train,test):
             sentences = sent_tokenize(w.text)
             for sentence in sentences:
                 if len(word_tokenize(sentence)) >= 5:
+                    for i in range(len(sentence)):
+                        sentence[i] = sentence[i].lower()
+                        sentence[i] = ''.join(c for c in sentence[i] if c.isalnum())
                     err_data.append(generateError(sentence))
 
     #Derive smaller list of hidden states for each sentence to be corrected
@@ -120,14 +123,21 @@ def main():
 def evaluate_results(test):
     test_data_alphanumeric = []
     #Chg test_data to alphanumeric and we remove sentences < 5 
-    for s in test:
-        if len(s) >= 5:
-            words = s.split()
-            for w in words:
-                w.lower()
-                w = ''.join(c for c in w if c.isalnum())
-            words = ' '.join(words)
-            test_data_alphanumeric.append(words)
+    for t in test:
+        f = open(t,"r")
+        data = f.read()
+        soup = BeautifulSoup(data,'html.parser')
+        body = soup.findAll('body')
+        for b in body:
+            sentences = sent_tokenize(b.text)
+            for sentence in sentences:
+                sentence = sentence.split()
+                if len(sentence) >= 5:
+                    for i in range(len(sentence)):
+                        sentence[i] = sentence[i].lower()
+                        sentence[i] = ''.join(c for c in sentence[i] if c.isalnum())
+                    sentence = ' '.join(sentence)
+                    test_data_alphanumeric.append(sentence)
 
     #Access the error data for all types of errors
     with open("with_errors.json","r") as file:
@@ -145,41 +155,41 @@ def evaluate_results(test):
     err_data = []
     for s in with_errors:
         words = s.split()
-        for w in words:
-            w.lower()
-            w = ''.join(c for c in w if c.isalnum())
+        for i in range(len(words)):
+            words[i] = words[i].lower()
+            words[i] = ''.join(c for c in words[i] if c.isalnum())
         words = ' '.join(words)
         err_data.append(words)
     err_data0 = []
     for s in with_errors0:
         words = s.split()
-        for w in words:
-            w.lower()
-            w = ''.join(c for c in w if c.isalnum())
+        for i in range(len(words)):
+            words[i].lower()
+            words[i] = ''.join(c for c in words[i] if c.isalnum())
         words = ' '.join(words)
         err_data0.append(words)
     err_data1 = []
     for s in with_errors1:
         words = s.split()
-        for w in words:
-            w.lower()
-            w = ''.join(c for c in w if c.isalnum())
+        for i in range(len(words)):
+            words[i].lower()
+            words[i] = ''.join(c for c in words[i] if c.isalnum())
         words = ' '.join(words)
         err_data1.append(words)
     err_data2 = []
     for s in with_errors2:
         words = s.split()
-        for w in words:
-            w.lower()
-            w = ''.join(c for c in w if c.isalnum())
+        for i in range(len(words)):
+            words[i].lower()
+            words[i] = ''.join(c for c in words[i] if c.isalnum())
         words = ' '.join(words)
         err_data2.append(words)
     err_data3 = []
     for s in with_errors3:
         words = s.split()
-        for w in words:
-            w.lower()
-            w = ''.join(c for c in w if c.isalnum())
+        for i in range(len(words)):
+            words[i].lower()
+            words[i] = ''.join(c for c in words[i] if c.isalnum())
         words = ' '.join(words)
         err_data3.append(words)
 
@@ -197,20 +207,21 @@ def evaluate_results(test):
 
     print("Getting accuracy")
     acc = accuracy(corrected,err_data)
-    acc0 = accuracy(corrected_0,err_data0)
-    acc1 = accuracy(corrected_1,err_data1)
-    acc2 = accuracy(corrected_2,err_data2)
-    acc3 = accuracy(corrected_3,err_data3)
+    #acc0 = accuracy(corrected_0,err_data0)
+    #acc1 = accuracy(corrected_1,err_data1)
+    #acc2 = accuracy(corrected_2,err_data2)
+    #acc3 = accuracy(corrected_3,err_data3)
 
     print("Getting all eval stats")
     correct, new_errors, failed = evaluate_accuracy(test_data_alphanumeric,err_data,corrected)
-    correct0, new_errors0, failed0 = evaluate_accuracy(test_data_alphanumeric,err_data0,corrected_0)
-    correct1, new_errors1, failed1 = evaluate_accuracy(test_data_alphanumeric,err_data1,corrected_1)
-    correct2, new_errors2, failed2 = evaluate_accuracy(test_data_alphanumeric,err_data2,corrected_2)
-    correct3, new_errors3, failed3 = evaluate_accuracy(test_data_alphanumeric,err_data3,corrected_3)
-    
+    #correct0, new_errors0, failed0 = evaluate_accuracy(test_data_alphanumeric,err_data0,corrected_0)
+    #correct1, new_errors1, failed1 = evaluate_accuracy(test_data_alphanumeric,err_data1,corrected_1)
+    #correct2, new_errors2, failed2 = evaluate_accuracy(test_data_alphanumeric,err_data2,corrected_2)
+    #correct3, new_errors3, failed3 = evaluate_accuracy(test_data_alphanumeric,err_data3,corrected_3)
+
     print("Overall performance all mistakes : ")
     print(f"correctly modified : {correct}, new errors introduced : {new_errors}, failed correcting : {failed}, accuracy : {acc}")
+    """
     print("Overall performance extra letter : ")
     print(f"correctly modified : {correct0}, new errors introduced : {new_errors0}, failed correcting : {failed0}, accuracy : {acc0}")
     print("Overall performance missing letter : ")
@@ -219,7 +230,7 @@ def evaluate_results(test):
     print(f"correctly modified : {correct2}, new errors introduced : {new_errors2}, failed correcting : {failed2}, accuracy : {acc2}")
     print("Overall performance typo : ")
     print(f"correctly modified : {correct3}, new errors introduced : {new_errors3}, failed correcting : {failed3}, accuracy : {acc3}")
-
+    """
 
 if __name__ == "__main__":
     main()
