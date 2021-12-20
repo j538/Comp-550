@@ -31,9 +31,9 @@ an "UNK" token for when we encounter unknown words in the testing data. We use a
 prob_distribution takes 2 arguments, N which is the number of values we want to generate the distribution for, and error, which is the probabiltiy of there being a typing error. 
 A Geometric distribution with 1-error as the first term is generated, and returned in the form of a list, where list[0] is the first term, list[1] the second and so on.
 
-get_single_emission_prob_dist and get_single_emission_prob are very similar. They both take 3 arguments, target, words, and error, where target is the word for which 
+get_single_emission_prob and get_single_emission_prob_equal are very similar. They both take 3 arguments, target, words, and error, where target is the word for which 
 we want to calculate the emission probabilties, words is the list of words for which to calculate the emission probabilties for, and error is the probability of making a typing error.
-The difference between the 2, is get_single_emission_prob assumes that each word in words is equally likely to be emitted, and get_single_emission_prob_dist calles prob_distribution to
+The difference between the 2, is get_single_emission_prob_equal assumes that each word in words is equally likely to be emitted, and get_single_emission_prob calls prob_distribution to
 get a distribution and assigns probabilties based on levenshtein distance from target.
 
 emissions takes a list of words and error, and calls get_single_emission_prob on each.
