@@ -114,6 +114,7 @@ def get_single_emission_prob(target,words,error):
     for word2 in words:
         emissions[word2]=(error/len(words))
     emissions[target]=1-error
+    return emissions
 
 #calculate emission probability given list of words and a probability of error
 def emission_probs(words,error):
