@@ -163,8 +163,8 @@ def evaluate_results(test):
                     test_data_alphanumeric.append(sentence)
 
     #Access the error data for all types of errors
-    #with open("with_errors.json","r") as file:
-    #    with_errors = json.load(file)
+    with open("with_errors.txt","r") as file:
+        with_errors = json.load(file)
     with open("with_errors_type0_v2.json","r") as file:
         with_errors0 = json.load(file)
     with open("with_errors_type1_v2.json","r") as file:
@@ -175,8 +175,7 @@ def evaluate_results(test):
         with_errors3 = json.load(file)
 
     #Change the error data to alphanumeric
-    err_data = []
-    """
+    err_data = [] 
     for s in with_errors:
         words = s.split()
         for i in range(len(words)):
@@ -184,7 +183,6 @@ def evaluate_results(test):
             words[i] = ''.join(c for c in words[i] if c.isalnum())
         words = ' '.join(words)
         err_data.append(words)
-    """
     err_data0 = []
     for s in with_errors0:
         words = s.split()
@@ -219,8 +217,8 @@ def evaluate_results(test):
         err_data3.append(words)
 
     #Access the corrected data
-    #with open("corrected_data.json","r") as f:
-    #    corrected = json.load(f)
+    with open("corrected_data.txt","r") as f:
+        corrected = json.load(f)
     with open("corrected_data_error_type0_v2.json","r") as f:
         corrected_0 = json.load(f)
     with open("corrected_data_error_type1_v2.json","r") as f:
@@ -231,14 +229,15 @@ def evaluate_results(test):
         corrected_3 = json.load(f)
 
     print("Getting all eval stats")
-    #correct, new_errors, failed = evaluate_accuracy(test_data_alphanumeric,err_data,corrected)
+    correct, new_errors, failed = evaluate_accuracy(test_data_alphanumeric,err_data,corrected)
     correct0, new_errors0, failed0 = evaluate_accuracy(test_data_alphanumeric,err_data0,corrected_0)
     correct1, new_errors1, failed1 = evaluate_accuracy(test_data_alphanumeric,err_data1,corrected_1)
     correct2, new_errors2, failed2 = evaluate_accuracy(test_data_alphanumeric,err_data2,corrected_2)
     correct3, new_errors3, failed3 = evaluate_accuracy(test_data_alphanumeric,err_data3,corrected_3)
 
-    #print("Overall performance all mistakes : ")
-    #print(f"correctly modified : {correct}, new errors introduced : {new_errors}, failed correcting : {failed}")
+    # Final results 
+    print("Overall performance all mistakes : ")
+    print(f"correctly modified : {correct}, new errors introduced : {new_errors}, failed correcting : {failed}")
     print("Overall performance extra letter : ")
     print(f"correctly modified : {correct0}, new errors introduced : {new_errors0}, failed correcting : {failed0}")
     print("Overall performance missing letter : ")
