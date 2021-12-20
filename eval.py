@@ -17,9 +17,8 @@ def evaluate_accuracy(original, w_errors, corrected):
     correctly_modified = 0
     new_errors = 0 
     failed_corrections = 0
-    unknown_errors = 0
+    total_number_words = 0
 
-    
     # Tokenize each sentence of each set
     for i in range(len(original)):
         o_words = original[i].split()
@@ -32,6 +31,7 @@ def evaluate_accuracy(original, w_errors, corrected):
 
         if length_o == length_c and length_o == length_e:
             for j in range(length_o):
+                total_number_words += 1
                 # correctly_modified: A word was perfectly corrected
                 if o_words[j] == c_words[j] and o_words[j] != e_words[j]:
                     correctly_modified += 1
@@ -44,5 +44,5 @@ def evaluate_accuracy(original, w_errors, corrected):
                     #print("errors: " + str(e_words[j]))
                     #print("corrected: " + str(c_words[j]))
                     failed_corrections += 1
-          
-    return correctly_modified, new_errors, failed_corrections
+        
+    return correctly_modified, new_errors, failed_corrections, total_number_words

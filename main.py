@@ -222,23 +222,23 @@ def evaluate_results(test):
         corrected_3 = json.load(f)
 
     print("Getting all eval stats")
-    correct, new_errors, failed = evaluate_accuracy(test_data_alphanumeric,err_data,corrected)
-    correct0, new_errors0, failed0 = evaluate_accuracy(test_data_alphanumeric,err_data0,corrected_0)
-    correct1, new_errors1, failed1 = evaluate_accuracy(test_data_alphanumeric,err_data1,corrected_1)
-    correct2, new_errors2, failed2 = evaluate_accuracy(test_data_alphanumeric,err_data2,corrected_2)
-    correct3, new_errors3, failed3 = evaluate_accuracy(test_data_alphanumeric,err_data3,corrected_3)
+    correct, new_errors, failed, total_number_words = evaluate_accuracy(test_data_alphanumeric,err_data,corrected)
+    correct0, new_errors0, failed0, total_number_words0 = evaluate_accuracy(test_data_alphanumeric,err_data0,corrected_0)
+    correct1, new_errors1, failed1, total_number_words1 = evaluate_accuracy(test_data_alphanumeric,err_data1,corrected_1)
+    correct2, new_errors2, failed2, total_number_words2 = evaluate_accuracy(test_data_alphanumeric,err_data2,corrected_2)
+    correct3, new_errors3, failed3, total_number_words3 = evaluate_accuracy(test_data_alphanumeric,err_data3,corrected_3)
 
     # Final results 
     print("Overall performance all mistakes : ")
-    print(f"correctly modified : {correct}, new errors introduced : {new_errors}, failed correcting : {failed}")
+    print(f"correctly modified : {correct}, new errors introduced : {new_errors}, failed correcting : {failed}, total number of words: {total_number_words}")
     print("Overall performance extra letter : ")
-    print(f"correctly modified : {correct0}, new errors introduced : {new_errors0}, failed correcting : {failed0}")
+    print(f"correctly modified : {correct0}, new errors introduced : {new_errors0}, failed correcting : {failed0}, total number of words: {total_number_words0}")
     print("Overall performance missing letter : ")
-    print(f"correctly modified : {correct1}, new errors introduced : {new_errors1}, failed correcting : {failed1}")
+    print(f"correctly modified : {correct1}, new errors introduced : {new_errors1}, failed correcting : {failed1}, , total number of words: {total_number_words1}")
     print("Overall performance consecutive characters reversed: ")
-    print(f"correctly modified : {correct2}, new errors introduced : {new_errors2}, failed correcting : {failed2}")
+    print(f"correctly modified : {correct2}, new errors introduced : {new_errors2}, failed correcting : {failed2}, total number of words: {total_number_words2}")
     print("Overall performance typo : ")
-    print(f"correctly modified : {correct3}, new errors introduced : {new_errors3}, failed correcting : {failed3}")
+    print(f"correctly modified : {correct3}, new errors introduced : {new_errors3}, failed correcting : {failed3}, total number of words: {total_number_words3}")
 
 
 if __name__ == "__main__":
