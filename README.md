@@ -67,4 +67,4 @@ by our function (an error was introduced and our model successfully corrected it
 word (if an error was introducted and our model did not fix it to be the same as in the original sentence). The counts of all these metrics are returned by the function.
 
 # data
-The data that was used for training and testing the model are news articles from reuters. The files have names of the form "reut2-xxx.sgm". Lists of some proper nouns included in the article are in the files of the form "all-xxx-strings.sgm"
+The data that was used for training and testing the model are news articles from reuters. The files have names of the form "reut2-xxx.sgm". Lists of some proper nouns included in the article are in the files of the form "all-xxx-strings.sgm". In order to replicate the results, the data must be in the same folder as all the python files.
