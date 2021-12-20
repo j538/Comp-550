@@ -66,3 +66,5 @@ the error added, and corrected, which is our program's attempt at correcting the
 by our function (an error was introduced and our model successfully corrected it) , if our function introduced a new error by changing a word that didn't need to be changed, and if our model failed to correct the 
 word (if an error was introducted and our model did not fix it to be the same as in the original sentence). The counts of all these metrics are returned by the function.
 
+# data
+The data that was used for training and testing the model are news articles from reuters. The files have names of the form "reut2-xxx.sgm". Lists of some proper nouns included in the article are in the files of the form "all-xxx-strings.sgm"
