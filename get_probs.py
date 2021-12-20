@@ -91,7 +91,7 @@ def prob_distribution(error,N):
     return distribution
 
 #returns dictionary of emission probailities for single word (Can use during runtime for unknown)
-def get_single_emission_prob(target,words,error):
+def get_single_emission_prob_dist(target,words,error):
     emissions=collections.defaultdict(float)
     tmp_distance_counts = collections.defaultdict(list)
     # for each word calculate distance from current word
@@ -107,6 +107,13 @@ def get_single_emission_prob(target,words,error):
         for word2 in tmp_distance_counts[dis]:
             emissions[word2] = distribution[dis] / len(tmp_distance_counts[dis])
     return emissions
+
+#gets emission probabilities with equal distribution
+def get_single_emission_prob(target,words,error):
+    emissions = collections.defaultdict(float)
+    for word2 in words:
+        emissions[word2]=(error/len(words))
+    emissions[target]=1-error
 
 #calculate emission probability given list of words and a probability of error
 def emission_probs(words,error):
