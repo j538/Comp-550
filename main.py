@@ -23,13 +23,6 @@ def get_corrections(train,test):
 
     #Extract emission probabilities from training data
     print("Extracting emission probabilities.")
-    #err_words = []
-    #all_words = [t for t in transitions.keys()]
-    #emissions = collections.defaultdict(lambda: collections.defaultdict(float))
-    #for w in all_words:
-    #    tmp_list = generateAllErrors(w)
-        #rint = random.randint(0, len(tmp_list)-1)
-    #    emissions[w] = get_single_emission_prob(w,all_words+tmp_list,0.1)
 
     #Using precomputed emissions since too long to compute them every time
     emissions = collections.defaultdict(lambda: collections.defaultdict(float))
